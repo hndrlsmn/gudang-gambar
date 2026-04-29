@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gudang Gambar Otomatis</title>
+    <style>
+    :root { 
+        --navy: #0a192f; 
+        --accent: #64ffda; /* Biru Toska Cerah */
+        --slate: #ccd6f6;
+    }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--navy); color: var(--slate); margin: 0; padding: 20px; }
+    
+    .header { 
+        text-align: center; 
+        padding: 40px 0; 
+        border: 1px solid var(--accent); 
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    .header h1 { color: var(--accent); margin: 0; text-transform: uppercase; }
+    
+    .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .img-card {
+        background: #112240;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid transparent;
+        transition: 0.3s;
+    }
+    
+    .img-card:hover { border-color: var(--accent); transform: scale(1.02); }
+    
+    .img-card img { width: 100%; height: 250px; object-fit: cover; opacity: 0.8; transition: 0.3s; }
+    .img-card:hover img { opacity: 1; }
+    
+    .img-info { padding: 15px; text-align: center; font-size: 13px; color: var(--accent); }
+</style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>📦 GUDANG KOLEKSI GAMBAR</h1>
+        <p>Cukup upload ke folder "koleksi", gambar muncul otomatis di sini.</p>
+    </div>
+
+    <div id="loading" class="loading">Menghubungkan ke database GitHub...</div>
+    <div class="gallery" id="gallery"></div>
+
+    <script>
+        // --- KONFIGURASI KETUA ---
+        const username = "USER_GITHUB_KETUA"; // Ganti dengan username GitHub Ketua
+        const repo = "gudang-gambar";        // Ganti dengan nama repository
+        const folder = "koleksi";           // Nama folder tempat simpan foto
+
+        async function loadImages() {
+            const gallery = document.getElementById('gallery');
+            const loading = document.getElementById('loading');
+            
+            try {
+                // Mengambil daftar file dari GitHub API
+                const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${folder}`);
+                const files = await response.json();
+                
+                loading.style.display = 'none';
+                
+                files.forEach(file => {
+                    // Hanya ambil file gambar
+                    if (file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                        const card = `
+                            <div class="img-card">
+                                <a href="${file.download_url}" target="_blank">
+                                    <img src="${file.download_url}" alt="${file.name}">
+                                </a>
+                                <div class="img-info">
+                                    ${file.name}<br>
+                                    <small>Terdeteksi Otomatis</small>
+                                </div>
+                            </div>
+                        `;
+                        gallery.innerHTML += card;
+                    }
+                });
+            } catch (error) {
+                loading.innerHTML = "Gagal memuat gambar. Pastikan username dan nama repo benar.";
+                console.error(error);
+            }
+        }
+
+        loadImages();
+    </script>
+</body>
+</html>
