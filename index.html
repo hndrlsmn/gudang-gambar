@@ -5,43 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gudang Gambar Otomatis</title>
     <style>
-    :root { 
-        --navy: #0a192f; 
-        --accent: #64ffda; /* Biru Toska Cerah */
-        --slate: #ccd6f6;
-    }
-    body { font-family: 'Segoe UI', sans-serif; background: var(--navy); color: var(--slate); margin: 0; padding: 20px; }
-    
-    .header { 
-        text-align: center; 
-        padding: 40px 0; 
-        border: 1px solid var(--accent); 
-        border-radius: 10px;
-        margin-bottom: 30px;
-    }
-    .header h1 { color: var(--accent); margin: 0; text-transform: uppercase; }
-    
-    .gallery {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 20px;
-    }
-    
-    .img-card {
-        background: #112240;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 1px solid transparent;
-        transition: 0.3s;
-    }
-    
-    .img-card:hover { border-color: var(--accent); transform: scale(1.02); }
-    
-    .img-card img { width: 100%; height: 250px; object-fit: cover; opacity: 0.8; transition: 0.3s; }
-    .img-card:hover img { opacity: 1; }
-    
-    .img-info { padding: 15px; text-align: center; font-size: 13px; color: var(--accent); }
-</style>
+        :root { --gold: #b8860b; --dark: #121212; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; padding: 20px; }
+        .header { text-align: center; padding: 40px 0; border-bottom: 2px solid var(--gold); margin-bottom: 30px; }
+        .header h1 { color: var(--gold); margin: 0; letter-spacing: 2px; }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 0 5%;
+        }
+        
+        .img-card {
+            background: #222;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #333;
+            transition: 0.3s;
+        }
+        
+        .img-card:hover { transform: translateY(-5px); border-color: var(--gold); }
+        
+        .img-card img { width: 100%; height: 250px; object-fit: cover; display: block; }
+        
+        .img-info { padding: 15px; text-align: center; font-size: 13px; color: #888; }
+        
+        .loading { text-align: center; font-size: 1.2rem; color: var(--gold); padding: 50px; }
+    </style>
 </head>
 <body>
 
