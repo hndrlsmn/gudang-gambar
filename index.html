@@ -3,88 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gudang Gambar Otomatis</title>
-    <style>
-        :root { --gold: #b8860b; --dark: #121212; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; padding: 20px; }
-        .header { text-align: center; padding: 40px 0; border-bottom: 2px solid var(--gold); margin-bottom: 30px; }
-        .header h1 { color: var(--gold); margin: 0; letter-spacing: 2px; }
-        
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 0 5%;
-        }
-        
-        .img-card {
-            background: #222;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #333;
-            transition: 0.3s;
-        }
-        
-        .img-card:hover { transform: translateY(-5px); border-color: var(--gold); }
-        
-        .img-card img { width: 100%; height: 250px; object-fit: cover; display: block; }
-        
-        .img-info { padding: 15px; text-align: center; font-size: 13px; color: #888; }
-        
-        .loading { text-align: center; font-size: 1.2rem; color: var(--gold); padding: 50px; }
-    </style>
+    <title>WA Image Saver Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-[#dcf8c6] min-h-screen py-8 px-4 text-[#1a1a1a]">
+    <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-[#25d366]">
+        
+        <div class="bg-[#25d366] text-[#1a1a1a] p-8 text-center border-bottom-4 border-[#075e54]">
+            <h1 class="text-4xl font-black mb-2">📱 WA IMAGE SAVER PRO</h1>
+            <p class="text-lg font-bold opacity-80">Gudang Gambar Sablon • Tersimpan Otomatis • Rapi & Terorganisir</p>
+        </div>
 
-    <div class="header">
-        <h1>📦 GUDANG KOLEKSI GAMBAR</h1>
-        <p>Cukup upload ke folder "koleksi", gambar muncul otomatis di sini.</p>
+        <div id="uploadArea" class="p-12 text-center border-4 border-dashed border-[#25d366] m-6 rounded-2xl hover:border-[#1a1a1a] transition-all cursor-pointer hover:bg-[#f0fff4]">
+            <div class="text-6xl mb-6">📥</div>
+            <h2 class="text-2xl font-black text-[#1a1a1a] mb-2">Geser Gambar ke Sini</h2>
+            <p class="text-lg text-gray-700 mb-4 font-semibold">Khusus File JPG / PNG / WEBP</p>
+            <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
+            <button onclick="document.getElementById('fileInput').click()" 
+                    class="bg-[#1a1a1a] text-white px-10 py-4 rounded-xl font-bold hover:bg-[#075e54] transition-all shadow-lg">
+                PILIH GAMBAR
+            </button>
+        </div>
+
+        <div id="gallery" class="hidden p-8 space-y-6">
+            <div class="flex justify-between items-center mb-8 border-b-2 border-gray-100 pb-4">
+                <div>
+                    <span class="text-4xl font-black text-[#25d366]" id="totalImages">0</span>
+                    <span class="ml-2 text-lg font-bold text-[#1a1a1a]">Gambar Tersimpan</span>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="exportAll()" class="bg-[#1a1a1a] text-white px-6 py-2 rounded-xl font-bold hover:bg-gray-800">
+                        📥 Export
+                    </button>
+                    <button onclick="clearAll()" class="bg-red-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-700">
+                        🗑️ Hapus
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <input type="text" id="searchInput" placeholder="Cari nama pengirim..." 
+                       class="w-full p-4 border-2 border-[#1a1a1a] rounded-xl focus:ring-4 focus:ring-[#25d366] focus:outline-none text-lg text-black font-semibold">
+            </div>
+
+            <div id="imagesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <div id="groupSelector" class="p-8 bg-[#f0fff4] border-t-2 border-[#25d366]">
+            <h3 class="text-xl font-black mb-4 uppercase">📂 Kategori Grup</h3>
+            <select id="groupSelect" class="w-full p-4 border-2 border-[#1a1a1a] rounded-xl focus:ring-4 focus:ring-[#25d366] text-black font-bold appearance-none bg-white">
+                <option value="all">Semua Gambar</option>
+                <option value="Grup_Bisnis">Grup Bisnis</option>
+                <option value="Toko_Plastik">Toko Plastik</option>
+                <option value="Katalog_Sablon">Katalog Sablon</option>
+            </select>
+        </div>
     </div>
 
-    <div id="loading" class="loading">Menghubungkan ke database GitHub...</div>
-    <div class="gallery" id="gallery"></div>
-
     <script>
-        // --- KONFIGURASI KETUA ---
-        const username = "hndrlsmn"; // Ganti dengan username GitHub Ketua
-        const repo = "gudang-gambar";        // Ganti dengan nama repository
-        const folder = "koleksi";           // Nama folder tempat simpan foto
+        let images = JSON.parse(localStorage.getItem('waImages')) || [];
+        let currentGroup = 'all';
 
-        async function loadImages() {
-            const gallery = document.getElementById('gallery');
-            const loading = document.getElementById('loading');
+        function renderGallery() {
+            const grid = document.getElementById('imagesGrid');
+            const filtered = images.filter(img => 
+                currentGroup === 'all' || img.group === currentGroup
+            );
             
-            try {
-                // Mengambil daftar file dari GitHub API
-                const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${folder}`);
-                const files = await response.json();
-                
-                loading.style.display = 'none';
-                
-                files.forEach(file => {
-                    // Hanya ambil file gambar
-                    if (file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                        const card = `
-                            <div class="img-card">
-                                <a href="${file.download_url}" target="_blank">
-                                    <img src="${file.download_url}" alt="${file.name}">
-                                </a>
-                                <div class="img-info">
-                                    ${file.name}<br>
-                                    <small>Terdeteksi Otomatis</small>
-                                </div>
-                            </div>
-                        `;
-                        gallery.innerHTML += card;
-                    }
-                });
-            } catch (error) {
-                loading.innerHTML = "Gagal memuat gambar. Pastikan username dan nama repo benar.";
-                console.error(error);
-            }
+            grid.innerHTML = filtered.map(img => `
+                <div class="bg-white rounded-2xl p-4 shadow-md border-2 border-gray-100 hover:border-[#25d366] transition-all">
+                    <img src="${img.src}" class="w-full h-56 object-cover rounded-xl mb-4 cursor-pointer" onclick="viewFull('${img.src}')">
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-black text-[#1a1a1a]">${img.sender}</span>
+                            <span class="text-xs font-bold text-gray-500">${img.time}</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="downloadImage('${img.src}','${img.filename}')" 
+                                    class="flex-1 bg-[#25d366] text-[#1a1a1a] py-2 rounded-lg font-bold text-xs hover:bg-[#1a1a1a] hover:text-white transition-all">
+                                💾 SAVE
+                            </button>
+                            <button onclick="shareImage('${img.src}')" 
+                                    class="bg-gray-200 text-[#1a1a1a] py-2 px-4 rounded-lg font-bold text-xs">
+                                📤
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('') || '<div class="col-span-full text-center py-20 font-bold text-gray-600 italic text-xl">Belum ada gambar masuk...</div>';
+            
+            document.getElementById('totalImages').textContent = filtered.length;
+            toggleGallery();
         }
 
-        loadImages();
+        // ... Sisa fungsi JS Ketua tetap sama (handleFiles, saveImages, dsb) ...
+        function toggleGallery() {
+            document.getElementById('gallery').classList.toggle('hidden', images.length === 0);
+            document.getElementById('uploadArea').classList.toggle('hidden', images.length > 0);
+        }
+
+        document.getElementById('fileInput').addEventListener('change', e => handleFiles(e.target.files));
+        
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const imgData = {
+                        id: Date.now() + Math.random(),
+                        src: e.target.result,
+                        filename: file.name,
+                        sender: 'Pelanggan WA',
+                        time: new Date().toLocaleDateString('id-ID'),
+                        group: document.getElementById('groupSelect').value
+                    };
+                    images.unshift(imgData);
+                    saveImages();
+                    renderGallery();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function saveImages() { localStorage.setItem('waImages', JSON.stringify(images)); }
+        function downloadImage(src, filename) { 
+            const a = document.createElement('a'); a.href = src; a.download = filename; a.click(); 
+        }
+        function viewFull(src) {
+             const modal = document.createElement('div');
+             modal.innerHTML = `<div onclick="this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;justify-content:center;align-items:center"><img src="${src}" style="max-width:95%;max-height:95%;border-radius:10px"></div>`;
+             document.body.appendChild(modal);
+        }
+        function exportAll() {
+            const blob = new Blob([JSON.stringify(images)], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup_wa.json'; a.click();
+        }
+        function clearAll() { if(confirm('Hapus semua?')) { images = []; saveImages(); renderGallery(); } }
+
+        document.getElementById('groupSelect').addEventListener('change', e => { currentGroup = e.target.value; renderGallery(); });
+        renderGallery();
     </script>
 </body>
 </html>
